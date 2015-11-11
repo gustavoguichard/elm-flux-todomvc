@@ -71,26 +71,21 @@ update action model =
 
     ToggleCompleteAll ->
       let
-        areAllComplete = List.all .complete model.todos
-        toggleComplete complete item =
-          { item | complete <- complete }
-        allToggled =
-          if areAllComplete then
-            List.map (toggleComplete False) model.todos
-          else
-            List.map (toggleComplete True) model.todos
+        allComplete = List.all .complete model.todos
+        withToggleComplete item =
+          { item | complete <- not allComplete }
       in
-        { model | todos <- allToggled }
+        { model | todos <- List.map withToggleComplete model.todos }
 
-    UpdateText id text ->
+    UpdateText id untrimmedText ->
       let
+        text = String.trim untrimmedText
         withText text id item =
           if item.id == id && not (String.isEmpty text) then
-            { item | text <- String.trim text }
+            { item | text <- text }
           else item
-        updatedItems = List.map (withText text id) model.todos
       in
-        { model | todos <- updatedItems }
+        { model | todos <- List.map (withText text id) model.todos }
 
     Destroy id ->
       let
