@@ -43,6 +43,14 @@ port dispatchUndoComplete       : Signal TodoId
 port dispatchUpdateText         : Signal (TodoId, String)
 
 
+withComplete : Bool -> TodoId -> TodoItem -> TodoItem
+withComplete complete id item =
+  if item.id == id then
+    { item | complete <- complete }
+  else
+    item
+
+
 update action model =
   case action of
     Create untrimmedText ->
@@ -54,6 +62,47 @@ update action model =
         else
           { model | todos <- [ TodoItem model.uid text False ] ++ model.todos
                   , uid <- model.uid + 1 }
+
+    Complete id ->
+      { model | todos <- List.map (withComplete True id) model.todos }
+
+    UndoComplete id ->
+      { model | todos <- List.map (withComplete False id) model.todos }
+
+    ToggleCompleteAll ->
+      let
+        areAllComplete = List.all .complete model.todos
+        toggleComplete complete item =
+          { item | complete <- complete }
+        allToggled =
+          if areAllComplete then
+            List.map (toggleComplete False) model.todos
+          else
+            List.map (toggleComplete True) model.todos
+      in
+        { model | todos <- allToggled }
+
+    UpdateText id text ->
+      let
+        withText text id item =
+          if item.id == id && not (String.isEmpty text) then
+            { item | text <- String.trim text }
+          else item
+        updatedItems = List.map (withText text id) model.todos
+      in
+        { model | todos <- updatedItems }
+
+    Destroy id ->
+      let
+        todosWithoutId = List.filter (\item -> item.id /= id) model.todos
+      in
+        { model | todos <- todosWithoutId }
+
+    DestroyCompleted ->
+      { model | todos <- List.filter (\item -> not item.complete) model.todos }
+
+
+
     _ ->
       model
 
