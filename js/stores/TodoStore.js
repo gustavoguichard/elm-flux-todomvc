@@ -135,12 +135,11 @@ ports.todoListChanges.subscribe(function(updatedTodoList) {
 
   updatedTodoList.forEach(function(item) {
     _todos[item.id] = item;
+    console.log(_todos)
   });
 
   TodoStore.emitChange();
 });
-
-ports.dispatchCreate.send("Gotta port more JS to Elm!");
 
 // Register callback to handle all updates
 AppDispatcher.register(function(action) {
@@ -148,11 +147,7 @@ AppDispatcher.register(function(action) {
 
   switch(action.actionType) {
     case TodoConstants.TODO_CREATE:
-      text = action.text.trim();
-      if (text !== '') {
-        create(text);
-        TodoStore.emitChange();
-      }
+      ports.dispatchCreate.send(action.text);
       break;
 
     case TodoConstants.TODO_TOGGLE_COMPLETE_ALL:

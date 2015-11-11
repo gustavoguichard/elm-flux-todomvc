@@ -1,6 +1,9 @@
 module TodoStore where
 
 
+import String
+
+
 type Action
   = Create String
   | Complete TodoId
@@ -12,7 +15,9 @@ type Action
 
 
 type alias TodoItem =
-  { id : String }
+  { id        : Int
+  , text      : String
+  , complete  : Bool }
 
 
 type alias TodoId = Int
@@ -29,27 +34,38 @@ actions =
     , Signal.map (\(id, text) -> UpdateText id text) dispatchUpdateText ]
 
 
-port dispatchCreate : Signal String
-port dispatchComplete : Signal TodoId
-port dispatchDestroy : Signal TodoId
-port dispatchDestroyCompleted : Signal ()
-port dispatchToggleCompleteAll : Signal ()
-port dispatchUndoComplete : Signal TodoId
-port dispatchUpdateText : Signal (TodoId, String)
+port dispatchCreate             : Signal String
+port dispatchComplete           : Signal TodoId
+port dispatchDestroy            : Signal TodoId
+port dispatchDestroyCompleted   : Signal ()
+port dispatchToggleCompleteAll  : Signal ()
+port dispatchUndoComplete       : Signal TodoId
+port dispatchUpdateText         : Signal (TodoId, String)
 
 
 update action model =
-  model
+  case action of
+    Create untrimmedText ->
+      let
+        text = String.trim untrimmedText
+      in
+        if String.isEmpty text then
+          model
+        else
+          { model | todos <- [ TodoItem model.uid text False ] ++ model.todos
+                  , uid <- model.uid + 1 }
+    _ ->
+      model
 
 
 initialModel =
   { todos = []
-  , uid = 1 }
+  , uid   = 1 }
 
 
 modelChanges =
   Signal.foldp update initialModel actions
 
 port todoListChanges : Signal (List TodoItem)
-port todoListChanges = Signal.map .todos modelChanges
+port todoListChanges =  Signal.map .todos modelChanges
                         |> Signal.dropRepeats
