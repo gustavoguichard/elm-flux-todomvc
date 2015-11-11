@@ -1,3 +1,5 @@
 /js/bundle.js
 /js/bundle.min.js
 /node_modules/
+/elm-stuff/
+elm-todomvc.js
